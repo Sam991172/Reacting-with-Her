@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Our Love Story Questionnaire 💘</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Georgia', serif; }
+    nav {
+      background:rgba(0,0,0,0.6); position:fixed; top:0; width:100%; display:flex;
+      justify-content: center; padding:10px; z-index:10;
+    }
+    nav a {
+      color:white; margin:0 8px; text-decoration:none; font-size:14px;
+      padding:6px 10px; border-radius:5px;
+    }
+    nav a.active, nav a:hover { background:rgba(255,255,255,0.3); }
+    section {
+      display:none; padding:60px 20px 20px;
+      min-height:100vh; color:#fff; background-size:cover; background-position:center;
+    }
+    section.active { display:block; }
+    .container {
+      max-width:600px; margin:auto; background:rgba(0,0,0,0.5);
+      padding:20px; border-radius:10px;
+    }
+    h2 { text-align:center; margin-bottom:20px; font-weight:normal; }
+    label { display:block; margin:15px 0 5px; font-style:italic; }
+    input, textarea {
+      width:100%; padding:8px; border:none; border-radius:5px;
+      background:rgba(255,255,255,0.8); color:#333;
+    }
+    button {
+      margin-top:20px; padding:12px;
+      background:#ff4081; color:#fff; border:none; width:100%;
+      border-radius:5px; font-size:16px;
+      cursor:pointer;
+    }
+    .music-control {
+      position: fixed; bottom: 20px; right: 20px;
+      background:rgba(0,0,0,0.6); color:white;
+      padding:10px; border-radius:50%;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Music -->
+  <audio id="bgMusic" loop>
+    <source src="https://example.com/romantic-music.mp3" type="audio/mpeg">
+  </audio>
+  <div class="music-control" onclick="toggleMusic()">🔊</div>
+
+  <!-- Navigation Bar -->
+  <nav id="navbar"></nav>
+
+  <!-- Questionnaire Sections -->
+  <form id="romanceForm">
+    <!-- Page Template -->
+    <template id="page-template">
+      <section>
+        <div class="container">
+          <h2></h2>
+          <div class="questions"></div>
+          <button type="button" class="next-btn">Next</button>
+        </div>
+      </section>
+    </template>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    emailjs.init("YOUR_EMAILJS_USER_ID");
+
+    const pages = [
+      {id:'dress', title:'Dress', bg:'https://source.unsplash.com/featured/?dress', questions:[
+        {name:'dressStyle', label:'What’s your dream outfit for a magical night out with me?'},
+        {name:'dressColor', label:'What color makes you feel like royalty?'},
+        {name:'dressFeel', label:'Which outfit makes you feel most *you*?'}]},
+      {id:'color', title:'Color', bg:'https://source.unsplash.com/featured/?colors', questions:[
+        {name:'soulColor', label:'If your soul had a color, what would it be?'},
+        {name:'colorMemory', label:'Which color brings back a beautiful memory?'},
+        {name:'fastColor', label:'A color that makes your heart beat a little faster?'}]},
+      {id:'food', title:'Food', bg:'https://source.unsplash.com/featured/?romantic-food', questions:[
+        {name:'cuddleFood', label:'What dish feels like a warm hug?'},
+        {name:'lastMeal', label:'If we could share one last meal together, what would it be?'},
+        {name:'comfortFood', label:'What’s your comfort food after a long day?'}]},
+      {id:'book', title:'Book', bg:'https://source.unsplash.com/featured/?book,romance', questions:[
+        {name:'loveBook', label:'Which book do you wish I read to understand you more?'},
+        {name:'bookLine', label:'A line from a book that lives in your heart?'},
+        {name:'storyTitle', label:'If we wrote our own love story, what would the title be?'}]},
+      {id:'song', title:'Song', bg:'https://source.unsplash.com/featured/?music,romance', questions:[
+        {name:'loveSong', label:'A song that describes how you feel about love?'},
+        {name:'storySong', label:'Our story sounds like which song?'},
+        {name:'lyricButterflies', label:'A lyric that always gives you butterflies?'}]},
+      {id:'lines', title:'Romantic Lines', bg:'https://source.unsplash.com/featured/?romantic-text', questions:[
+        {name:'lineComplete', label:'Complete this: "When I wear my favorite ________, I want you to look at me like ________."'},
+        {name:'whisper', label:'What do you wish I whispered in your ear right now?'},
+        {name:'loveFeels', label:'Finish: "Love feels like __________ with you."'}]},
+      {id:'movie', title:'Movie', bg:'https://source.unsplash.com/featured/?movie,romance', questions:[
+        {name:'comfortMovie', label:'Your favorite movie that feels like comfort?'},
+        {name:'movieScene', label:'A scene that made you cry in a good way?'},
+        {name:'movieChar', label:'A character you secretly love?'}]},
+      {id:'series', title:'Web Series', bg:'https://source.unsplash.com/featured/?series,romance', questions:[
+        {name:'feelSeries', label:'Which series made you feel the most?'},
+        {name:'coupleSeries', label:'A character couple you want us to be like?'},
+        {name:'bingeSeries', label:'Binge-night comfort series?'}]},
+      {id:'date', title:'Romantic Date', bg:'https://source.unsplash.com/featured/?romantic-date', questions:[
+        {name:'dreamDate', label:'If you could plan our most romantic date ever, what would it be?'},
+        {name:'dateDetails', label:'Place, music, food — describe it all like a movie.'},
+        {name:'sunOrSunset', label:'Sunrise or sunset – where do you want to watch it with me?'}]},
+      {id:'house', title:'Future House', bg:'https://source.unsplash.com/featured/?dream-house', questions:[
+        {name:'homeVibe', label:'Describe our future home’s vibe in 3 words.'},
+        {name:'bedroomWish', label:'One thing you definitely want in our bedroom?'},
+        {name:'kitchenLook', label:'How would our dream kitchen look?'}]},
+      {id:'bike', title:'Bike', bg:'https://source.unsplash.com/featured/?motorcycle', questions:[
+        {name:'bikeModel', label:'Which bike model makes you feel adventurous?'},
+        {name:'bikeColor', label:'What color bike do you see us riding together?'},
+        {name:'bikeRide', label:'Where would our first bike ride be?'})},
+      {id:'car', title:'Car', bg:'https://source.unsplash.com/featured/?car,romantic', questions:[
+        {name:'carModel', label:'Which car would you love us to drive off in together?'},
+        {name:'carColor', label:'What color says “us” to you?'},
+        {name:'carTrip', label:'The perfect road trip destination for us?'}]}
+    ];
+
+    const nav = document.getElementById('navbar');
+    const form = document.getElementById('romanceForm');
+    const tmpl = document.getElementById('page-template');
+
+    pages.forEach((p,i) => {
+      const navA = document.createElement('a');
+      navA.href='#'+p.id; navA.textContent=p.title;
+      navA.onclick = e => { e.preventDefault(); showPage(p.id); };
+      nav.appendChild(navA);
+
+      const clone = tmpl.content.cloneNode(true);
+      const sec = clone.querySelector('section');
+      sec.id = p.id;
+      sec.style.backgroundImage = `url(${p.bg})`;
+      clone.querySelector('h2').textContent = p.title;
+      const qwrap = clone.querySelector('.questions');
+      p.questions.forEach(q => {
+        const lbl = document.createElement('label');
+        lbl.textContent = q.label;
+        qwrap.appendChild(lbl);
+        const inp = document.createElement('textarea');
+        inp.name = q.name;
+        inp.required = true;
+        inp.rows = 2;
+        qwrap.appendChild(inp);
+      });
+      const btn = clone.querySelector('.next-btn');
+      btn.textContent = i < pages.length-1 ? 'Next →' : 'Send With Love 💌';
+      btn.onclick = () => {
+        if (form.checkValidity()) {
+          if (i < pages.length-1) showPage(pages[i+1].id);
+          else sendForm();
+        } else form.reportValidity();
+      };
+      form.appendChild(sec);
+    });
+
+    function showPage(id) {
+      document.querySelectorAll('section').forEach(s => {
+        s.classList.toggle('active', s.id===id);
+      });
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.toggle('active', a.hash === '#'+id);
+      });
+    }
+    showPage(pages[0].id);
+
+    function toggleMusic() {
+      const m = document.getElementById('bgMusic');
+      if (m.paused) { m.play(); } else m.pause();
+    }
+
+    function sendForm() {
+      emailjs.sendForm('YOUR_SERVICE_ID','YOUR_TEMPLATE_ID', form)
+        .then(() => alert('All your beautiful answers are sent 💞'))
+        .catch(() => alert('Oops… something went wrong, try again 💔'));
+    }
+  </script>
+</body>
+</html>
